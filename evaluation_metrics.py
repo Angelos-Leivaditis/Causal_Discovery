@@ -1,14 +1,15 @@
 import networkx as nx
 
-
+#we do not want a 0 in the denominator
 def safe_div(a, b):
     return a / b if b != 0 else 0.0
 
 
 def nx_sets_from_gt(GT: nx.DiGraph):
     """Ground-truth sets from a NetworkX DAG."""
-    true_adj = {frozenset((u, v)) for (u, v) in GT.edges()} #we build a set of undirected adjacencies from the directed edges
-    true_arr = {(u, v) for (u, v) in GT.edges()} #we Build a set of directed arrows
+    #we use a frozenset to ensure  that  u-v and v-u are recognized as the same connection 
+    true_adj = {frozenset((u, v)) for (u, v) in GT.edges()} #we create a set of undirected adjacencies from the directed edges
+    true_arr = {(u, v) for (u, v) in GT.edges()} #we create a set of directed arrows
     return true_adj, true_arr 
 
 
@@ -16,15 +17,15 @@ def cl_sets_from_causallearn_graph(clG, node_names):
     """
     Build adjacency + arrowhead sets from a causal-learn Graph object
     """
-    M = clG.graph # a p x p matrix encoding with edge endpoints between variables
+    M = clG.graph # a matrix that describe how nodes are connected.
     p = M.shape[0] # number of variables/nodes
 
     pred_adj = set()  # predicted undirected adjacencies
     pred_arr = set()  # predicted directed arrows
 
-    # Loop over all unordered pairs i, j  to avoid processing each pair twice
+    # Loop over all unordered pairs i, j, we chech the upper triangle og the matrix to avoid processing each pair twice
     for i in range(p):
-        for j in range(i + 1, p):
+        for j in range(i + 1, p): 
             a = M[i, j] 
             b = M[j, i]
 
@@ -32,15 +33,15 @@ def cl_sets_from_causallearn_graph(clG, node_names):
                 continue
 
             u, v = node_names[i], node_names[j] # indices to actual variable names
-            pred_adj.add(frozenset((u, v)))
+            pred_adj.add(frozenset((u, v))) #If there is a connection the names of the two variables are stored as a frozenset
 
             #we detect direction using the common causal-learn encoding
             if a == -1 and b == 1:
-                pred_arr.add((u, v))
+                pred_arr.add((u, v)) # u - v
             elif a == 1 and b == -1:
-                pred_arr.add((v, u))
+                pred_arr.add((v, u)) # v - u
 
-    return pred_adj, pred_arr
+    return pred_adj, pred_arr #all connected pairs and confirmed causal directions
 
 
 def precision_recall(true_set, pred_set):
