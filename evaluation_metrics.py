@@ -7,7 +7,7 @@ def safe_div(a, b):
 
 def nx_sets_from_gt(GT: nx.DiGraph):
     """Ground-truth sets from a NetworkX DAG."""
-    #we use a frozenset to ensure  that  u-v and v-u are recognized as the same connection 
+    #we use a frozenset to ensure  that  u to v and v to u are recognized as the same connection 
     true_adj = {frozenset((u, v)) for (u, v) in GT.edges()} #we create a set of undirected adjacencies from the directed edges
     true_arr = {(u, v) for (u, v) in GT.edges()} #we create a set of directed arrows
     return true_adj, true_arr 
@@ -17,8 +17,8 @@ def cl_sets_from_causallearn_graph(clG, node_names):
     """
     Build adjacency + arrowhead sets from a causal-learn Graph object
     """
-    M = clG.graph # a matrix that describe how nodes are connected.
-    p = M.shape[0] # number of variables/nodes
+    M = clG.graph #  matrix that describes how nodes are connected
+    p = M.shape[0] # number of variables
 
     pred_adj = set()  # predicted undirected adjacencies
     pred_arr = set()  # predicted directed arrows
@@ -37,17 +37,17 @@ def cl_sets_from_causallearn_graph(clG, node_names):
 
             #we detect direction using the common causal-learn encoding
             if a == -1 and b == 1:
-                pred_arr.add((u, v)) # u - v
+                pred_arr.add((u, v)) # u to v
             elif a == 1 and b == -1:
-                pred_arr.add((v, u)) # v - u
+                pred_arr.add((v, u)) # v to u
 
     return pred_adj, pred_arr #all connected pairs and confirmed causal directions
 
 
 def precision_recall(true_set, pred_set):
     correct = true_set & pred_set #true positives
-    prec = safe_div(len(correct), len(pred_set)) # precision = (true positives) / (predicted positives)
-    rec  = safe_div(len(correct), len(true_set)) #recall = (true positives) / (actual positives)
+    prec = safe_div(len(correct), len(pred_set)) # precision
+    rec  = safe_div(len(correct), len(true_set)) #recall
     return prec, rec, len(correct), len(pred_set), len(true_set) 
 
 
